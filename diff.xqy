@@ -14,7 +14,7 @@ declare function diff:xml-diff($doc-orig as node(), $doc-new as node()) as node(
     $doc-new
   else
     let $doc-orig := diff:detect-removals($doc-new, $doc-orig, xs:QName("diff:addition"), fn:true())
-    let $doc-new := diff:detect-removals($doc-orig, $doc-new, xs:QName("diff:removed"), fn:true())
+    let $doc-new := diff:detect-removals($doc-orig, $doc-new, xs:QName("diff:removal"), fn:true())
     let $doc-orig-map as map:map := diff:create-map-of-xml($doc-orig)
     let $doc-new-map as map:map := diff:create-map-of-xml($doc-new)
     let $diffs-from-original := $doc-orig-map - $doc-new-map
