@@ -261,9 +261,17 @@ function diff:group-parts(
     )
   ) else (
     let $earliest-matches := diff:find-earliest-matches($parts1, $parts2)
-    let $earliest-match1 := map:get($earliest-matches,'pos1')
+    let $earliest-match1 :=
+      if (fn:exists(map:get($earliest-matches,'pos1'))) then
+        map:get($earliest-matches,'pos1')
+      else
+        fn:count($parts1) + 1
     let $removed-range := 1 to ($earliest-match1 - 1)
-    let $earliest-match2 := map:get($earliest-matches,'pos2')
+    let $earliest-match2 :=
+      if (fn:exists(map:get($earliest-matches,'pos2'))) then
+        map:get($earliest-matches,'pos2')
+      else
+        fn:count($parts2) + 1
     let $added-range := 1 to ($earliest-match2 - 1)
     let $same-text := fn:string-join($current-group, "")[. ne '']
     let $removed-text := fn:string-join($parts1[fn:position() = $removed-range], "")[. ne '']
