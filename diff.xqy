@@ -2,9 +2,9 @@ xquery version "1.0-ml";
 
 module namespace diff = "http://marklogic.com/demo/xml-diff";
 
-import module namespace mem = "http://maxdewpoint.blogspot.com/memory-operations/functional" 
+import module namespace mem = "http://maxdewpoint.blogspot.com/memory-operations/functional"
   at "/ext/mlpm_modules/XQuery-XML-Memory-Operations/memory-operations-functional.xqy";
-import module namespace xq3 = "http://maxdewpoint.blogspot.com/xq3-ml-extensions" 
+import module namespace xq3 = "http://maxdewpoint.blogspot.com/xq3-ml-extensions"
   at "/ext/mlpm_modules/xq3-ml-extensions/xq3.xqy";
 
 declare variable $memoization as map:map := map:map();
@@ -26,10 +26,10 @@ declare function diff:xml-diff($doc-orig as node(), $doc-new as node()) as node(
 declare function diff:create-map-of-xml($doc as node()) as map:map {
   map:new((
     for $text in ($doc//text() union xq3:innermost($doc/descendant-or-self::*[. eq '']) union $doc/descendant-or-self::*/@diff:addition)
-    return 
+    return
       if ($text instance of element()) then
         map:entry(xdmp:path($text)||"/text()", '')
-      else 
+      else
         map:entry(xdmp:path($text), fn:string($text))
   ))
 };
@@ -54,7 +54,7 @@ declare function diff:detect-removals($doc-base as node(), $doc-new as node(), $
                          let $node-path := xq3:path($node)
                          let $orig-counter-part :=  map:get($elements-with-removed-children-map, $node-path)[1]
                          let $removed-count := fn:count($orig-counter-part/*) - fn:count($node/*)
-                         let $possible-removed := 
+                         let $possible-removed :=
                              fn:subsequence(
                                for $orig-child at $pos in $orig-counter-part/*
                                let $max-score :=
@@ -64,9 +64,9 @@ declare function diff:detect-removals($doc-base as node(), $doc-new as node(), $
                                       let $new-str-len := xs:double(fn:string-length($new-child))
                                       where fn:not($orig-child = $new-child)
                                       return
-                                        let $comparison := 
+                                        let $comparison :=
                                           diff:compare-strings($orig-child, $new-child)/node()
-                                        let $same-length := 
+                                        let $same-length :=
                                           xs:double(fn:sum(
                                               $comparison[type eq "same"]/text/fn:string-length(.)
                                           ))
@@ -78,7 +78,7 @@ declare function diff:detect-removals($doc-base as node(), $doc-new as node(), $
                                           $score
                                   )
                                order by $max-score ascending
-                               return 
+                               return
                                  element {fn:node-name($orig-child)} {
                                   attribute diff:pos {$pos},
                                   attribute {$annotation} {fn:true()},
@@ -115,7 +115,7 @@ declare function diff:detect-removals($doc-base as node(), $doc-new as node(), $
 
 declare function diff:typeswitch-transform($doc-new as node(), $diffs-from-original as map:map, $diffs-from-new as map:map) as node()* {
   typeswitch($doc-new)
-  case element() return 
+  case element() return
     element {fn:node-name($doc-new)} {
       $doc-new/@*,
       let $path := xdmp:path($doc-new)
@@ -139,13 +139,13 @@ declare function diff:typeswitch-transform($doc-new as node(), $diffs-from-origi
          )
       )
     }
-  case document-node() return 
+  case document-node() return
     document {
       for $n in $doc-new/node()
       return
         diff:typeswitch-transform($n, $diffs-from-original, $diffs-from-new)
     }
-  case text() return 
+  case text() return
     let $path := xdmp:path($doc-new)
     return
     if (map:contains($diffs-from-original,$path) or map:contains($diffs-from-new,$path)) then
@@ -159,7 +159,7 @@ declare function diff:typeswitch-transform($doc-new as node(), $diffs-from-origi
           if ($type eq "removed") then
             element diff:removal {$text}
           else if ($type eq "added") then
-            element diff:addition {$text}          
+            element diff:addition {$text}
           else
             text {$text}
       else if (map:contains($diffs-from-original,$path)) then
@@ -170,7 +170,7 @@ declare function diff:typeswitch-transform($doc-new as node(), $diffs-from-origi
       $doc-new
   default return
     $doc-new
-    
+
 };
 
 declare
@@ -194,15 +194,15 @@ function diff:compare-strings(
         map:get($memoization, $hash)
       ) else if (map:contains($memoization, $backwards-hash)) then (
         let $backwards-comparison := map:get($memoization, $backwards-hash)
-        let $result := 
+        let $result :=
           array-node {
             for $part in $backwards-comparison/node()
             return
               object-node {
                 "text": $part/text,
-                "type": 
-                  if ($part/type eq "added") then 
-                    "removed" 
+                "type":
+                  if ($part/type eq "added") then
+                    "removed"
                   else if ($part/type eq "removed") then
                     "added"
                   else
