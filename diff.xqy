@@ -25,7 +25,7 @@ declare function diff:xml-diff($doc-orig as node(), $doc-new as node()) as node(
 
 declare function diff:create-map-of-xml($doc as node()) as map:map {
   map:new((
-    for $text in ($doc//text() union xq3:innermost($doc/descendant-or-self::*[. eq '']) union $doc/descendant-or-self::*/@diff:addition)
+    for $text in ($doc//text() union xq3:innermost($doc/descendant-or-self::*[fn:string(.) eq '']) union $doc/descendant-or-self::*/@diff:addition)
     return
       if ($text instance of element()) then
         map:entry(xdmp:path($text)||"/text()", '')
