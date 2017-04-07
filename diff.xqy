@@ -37,8 +37,8 @@ declare function diff:create-map-of-xml($doc as node()) as map:map {
 declare function diff:detect-removals($doc-base as node(), $doc-new as node(), $annotation as xs:QName, $retain-content as xs:boolean) {
   let $elements-with-removed-children-map as map:map := map:new((
     for $element in $doc-base/descendant-or-self::*[*]
-    let $path := xq3:path($element)
-    let $counter-part := xq3:unpath($path, $doc-new)
+    let $path := xdmp:path($element)
+    let $counter-part := $doc-new ! xdmp:unpath($path)
     where fn:exists($counter-part) and fn:count($element/*) gt fn:count($counter-part/*)
     return
       map:entry($path, ($element, $counter-part))
@@ -51,12 +51,13 @@ declare function diff:detect-removals($doc-base as node(), $doc-new as node(), $
                        mem:copy($doc-new),
                        $extend-elements,
                        function($node) {
-                         let $node-path := xq3:path($node)
+                         let $node-path := xdmp:path($node)
                          let $orig-counter-part :=  map:get($elements-with-removed-children-map, $node-path)[1]
                          let $removed-count := fn:count($orig-counter-part/*) - fn:count($node/*)
                          let $possible-removed :=
                              fn:subsequence(
                                for $orig-child at $pos in $orig-counter-part/*
+                               let $orig-node-name := fn:node-name($orig-child)
                                let $max-score :=
                                    fn:max(
                                       for $new-child at $new-pos in $node/*
@@ -77,7 +78,12 @@ declare function diff:detect-removals($doc-base as node(), $doc-new as node(), $
                                         return
                                           $score
                                   )
-                               order by $max-score ascending
+                              let $node-name-count-diff :=
+                                  fn:abs(
+                                    fn:count($node/*[fn:node-name(.) eq $orig-node-name]) - 
+                                    fn:count($orig-counter-part/*[fn:node-name(.) eq $orig-node-name])
+                                  )
+                               order by $max-score ascending, $node-name-count-diff descending
                                return
                                  element {fn:node-name($orig-child)} {
                                   attribute diff:pos {$pos},
